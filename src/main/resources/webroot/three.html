@@ -8,34 +8,71 @@
 	</head>
 	<body>
 		<script src="js/three.js"></script>
-		<script src="js/KeyboardState.js"></script>
+		<script src="js/THREEx.KeyboardState.js"></script>
 		<script src="js/THREEx.FullScreen.js"></script>
+		<script src="js/OrbitControls.js"></script>
 		<script>
-			//var keyboard = new KeyboardState();
+			//MAIN
+			var container, scene, camera, renderer, controls, stats;
+			var keyboard = new THREEx.KeyboardState();
+			var cube;
+			init();
+			animate();
+			//Init
+			
+			function init() {
+			var keyboard = new THREEx.KeyboardState();
 			var scene = new THREE.Scene();
 			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
-			//THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
-
+			THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
+			//Renderer
 			var renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			document.body.appendChild( renderer.domElement );
-
+			//Controls
+			controls = new THREE.OrbitControls( camera, renderer.domElement );
+			//Adding Cube
 			var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 			var cube = new THREE.Mesh( geometry, material );
 			scene.add( cube );
 			camera.position.z = 5;
-
-			var render = function () {
-				requestAnimationFrame( render );
+}
+			
+			//Animation
+			
+				function animate() {
+				requestAnimationFrame( animate );
 				cube.rotation.x += 0.1;
 				cube.rotation.y += 0.05;
 				cube.material.color = new THREE.Color(0xffffff * Math.random());
 			    cube.material.needsUpdate = true;
-				renderer.render(scene, camera);
-			};
+				render();		
+				update();
+}
+
+				 function update()
+			{
+				// delta = change in time since last call (in seconds)
+				//var delta = clock.getDelta(); 
+
+				// functionality provided by THREEx.KeyboardState.js
+				if ( keyboard.pressed("1") )
+					document.getElementById('message').innerHTML = ' Have a nice day! - 1';	
+				if ( keyboard.pressed("2") )
+					document.getElementById('message').innerHTML = ' Have a nice day! - 2 ';	
+					
+				controls.update();
+				//stats.update(); 
+			}
+		
 			
-			render();
-		</script>	x
+			function render() 
+			{	
+				renderer.render( scene, camera );
+			}
+			
+			
+		</script>
 	</body>
 </html>
