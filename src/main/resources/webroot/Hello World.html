@@ -227,8 +227,8 @@ function init()
 }
 
 function update_lights(){
-    lightdata = loadJSON(function(response) {lightdata = JSON.parse(response);});
-	console.log(lightdata);
+    loadJSON(function(response) {lights = JSON.parse(response);});
+	console.log(lights);
 }
 
 function animate() 
@@ -240,9 +240,6 @@ function animate()
 		last_second = time.getSeconds();
 	}
     requestAnimationFrame( animate );
-    var lightdata = {"1":false};
-    //lightdata = loadJSON(function(response) {lightdata = JSON.parse(response);});
-	//console.log(lightdata);
     cube.rotation.x += 0.1;
 	cube.rotation.y += 0.05;
 	cube.material.color = new THREE.Color(0xffffff * Math.random());
