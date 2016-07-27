@@ -266,6 +266,7 @@ function update_lights(){
 }
 
 function animate() 
+//Animation Loop
 {
 	time = new Date();
 	if (last_second != time.getSeconds()){
@@ -274,6 +275,7 @@ function animate()
 		last_second = time.getSeconds();
 	}
     requestAnimationFrame( animate );
+    //Code that is executed during the animation loop
     cube.rotation.x += 0.1;
 	cube.rotation.y += 0.05;
 	spotlight.color = new THREE.Color(0xffffff * Math.random());
