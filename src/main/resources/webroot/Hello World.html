@@ -23,6 +23,23 @@
 	Date: July 2013 (three.js v59dev)
  */
 
+
+ function loadJSON(callback) {   
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+    xobj.open('GET', 'js/lights.json', true); // Replace 'my_data' with the path to your file
+    xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            callback(xobj.responseText);
+          }
+    };
+    xobj.send(null);  
+ }
+ 
+
+
+
 	
 //////////	
 // MAIN //
@@ -32,6 +49,8 @@
 var container, scene, camera, renderer, controls, stats;
 var keyboard = new THREEx.KeyboardState();
 var clock = new THREE.Clock();
+var last_second = 0;
+var lights = {};
 
 // custom global variables
 var cube;
@@ -207,8 +226,19 @@ function init()
 	//scene.fog = new THREE.FogExp2( 0x9999ff, 0.00025 );
 }
 
+function update_lights(){
+    loadJSON(function(response) {lights = JSON.parse(response);});
+	console.log(lights);
+}
+
 function animate() 
 {
+	time = new Date();
+	if (last_second != time.getSeconds()){
+		update_lights();
+		console.log("Updating...");
+		last_second = time.getSeconds();
+	}
     requestAnimationFrame( animate );
     cube.rotation.x += 0.1;
 	cube.rotation.y += 0.05;
