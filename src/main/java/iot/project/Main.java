@@ -20,6 +20,8 @@ import io.netty.util.internal.ThreadLocalRandom;
 import scala.Tuple2;
 
 public class Main {
+	
+	// Dirty Workaround for data stream
    private static JavaPairDStream<String, Integer> HouseData;
    static int webServerPort = 8080;
    private static final String host = "localhost";
@@ -27,20 +29,24 @@ public class Main {
    static {
        Logging.setLoggingDefaults();
    }
-
-   public static String bla = "{}";
-
+   // Necessary since not using kafka due to time limitation
+   public static String dataAsJs = "{}";
+   
+   // Generating random data which would be captured by the sensors in the house 
+   // Data will look like Houseid, Roomid, io
+   // io: 1 = Person in the Room --> Light should be turned on
+   //	  0 = no Person in the Room --> Light should be turned off
    public static String datagenerate() {
 
        int hid = ThreadLocalRandom.current().nextInt(1, 1 + 1);
-       int rid = ThreadLocalRandom.current().nextInt(1, 6 + 1);
+       int rid = ThreadLocalRandom.current().nextInt(1, 18 + 1);
        int io = ThreadLocalRandom.current().nextInt(0, 1 + 1);
 
        String hdata = hid + "," + rid + "," + io;
        return hdata;
    }
 
-   @SuppressWarnings("resource")
+   
    public static void main(String[] args) {
        // Obtain an instance of a logger for this class
        Logger log = LoggerFactory.getLogger(Main.class);
@@ -50,7 +56,7 @@ public class Main {
        log.info("Web server started on port " + webServerPort);
        log.info("Open http://localhost:" + webServerPort + " and/or http://localhost:" + webServerPort + "/hello");
 
-       // Do your stuff here
+
        // Create a server socket data source that sends string values
        ServerSocketSource<String> dataSource = new ServerSocketSource<>(() -> {
            return datagenerate();
@@ -63,12 +69,15 @@ public class Main {
        File myTempDir = Files.createTempDir();
        ssc.checkpoint(myTempDir.getAbsolutePath());
 
-       // Create a JavaReceiverInputDStream on target ip:port and count the words in input stream of \n delimited text
+       // Create a JavaReceiverInputDStream on target ip:port 
        JavaReceiverInputDStream<String> lines = ssc.socketTextStream(host, dataSource.getLocalPort(), StorageLevels.MEMORY_AND_DISK_SER);
-
+       
+       // Filling the javaPairDStream with Tuples containing Houseid-Roomid as Key and io as value 
        HouseData = lines
                .mapToPair(x -> new Tuple2<String, Integer>(x.split(",")[0] + "-" + x.split(",")[1], Integer.parseInt(x.split(",")[2])))
                .reduceByKey((i1, i2) -> i2)
+               
+       // Keep historic Data of the Room if no update for the Room is streamed
                .updateStateByKey((values, state) -> {
                    int sum;
                    if (values.size() != 0) {
@@ -79,15 +88,15 @@ public class Main {
 
                    return Optional.of(sum);
                });
-       HouseData.print();
 
+       // Converting RDD to Jason in order to be accessible through webserver
        HouseData.foreachRDD((i) -> {
-           bla = "{";
+    	   dataAsJs = "{";
            i.foreach((i2) -> {
-               bla += ("\"" + i2._1 + "\":" + i2._2() +  "," );
+        	   dataAsJs += ("\"" + i2._1 + "\":" + i2._2() +  "," );
            });
-           bla = bla.substring(0,bla.length()-1);
-           bla = bla +  "}";
+           dataAsJs = dataAsJs.substring(0,dataAsJs.length()-1);
+           dataAsJs = dataAsJs +  "}";
        });
 
        ssc.start();
@@ -105,11 +114,9 @@ public class Main {
        // Serve static files from src/main/resources/webroot
        spark.Spark.staticFiles.location("/webroot");
 
-       // Return "Hello World" at URL /hello
-       spark.Spark.get("/hello", (req, res) -> "Hello World");
-
-       spark.Spark.get("/test", (req, res) -> {
-           return bla;
+       // Return the House Data through HTTP
+       spark.Spark.get("/lightData", (req, res) -> {
+           return dataAsJs;
        });
 
        // Wait for server to be initialized
