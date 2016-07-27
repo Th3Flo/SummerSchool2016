@@ -31,14 +31,13 @@ public class Main {
 	static int webServerPort = 8080;
 	private static final String host = "localhost";
 	private static final String MTP = null;
-
 	static {
 		Logging.setLoggingDefaults();
 	}
 	
 public static String datagenerate (){
 		
-		int hid = ThreadLocalRandom.current().nextInt(1, 2 + 1);
+		int hid = ThreadLocalRandom.current().nextInt(1, 1 + 1);
 		int rid = ThreadLocalRandom.current().nextInt(1, 6 + 1);
 		int io = ThreadLocalRandom.current().nextInt(0, 1 + 1);
 		
@@ -46,6 +45,7 @@ public static String datagenerate (){
 		return hdata;
 	}
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		// Obtain an instance of a logger for this class
 		Logger log = LoggerFactory.getLogger(Main.class);
@@ -72,9 +72,16 @@ public static String datagenerate (){
 				HouseData = lines.mapToPair(x -> new Tuple2<String, Integer>(x.split(",")[0] + "-" + x.split(",")[1] , Integer.parseInt(x.split(",")[2])))
 						.reduceByKey((i1, i2) -> i2)
 						.updateStateByKey((values, state) -> {
-						    	      return Optional.of(values.get(0));
+								int sum;
+								if (values.size()!= 0){
+									sum = values.get(values.size()-1);
+								}
+								else {
+									sum = Integer.parseInt(state.get().toString());
+								}
+
+								return Optional.of(sum);
 						    	    });
-				
 				HouseData.print();
 
 				ssc.start();
@@ -95,13 +102,14 @@ public static String datagenerate (){
 		// Return "Hello World" at URL /hello
 		spark.Spark.get("/hello", (req, res) -> "Hello World");
 		
-		spark.Spark.get("/test", (req, res) -> { 
+		spark.Spark.get("/test", (req, res) -> {
+			StringBuffer b = new StringBuffer();
 		       HouseData.foreachRDD((i) -> {
-		           i.foreach((d2) -> {
-		               System.out.println("xxx " + d2);
+		           i.foreach((i2) -> {
+		        	   b.append(i2._1 + " : " + i2._2());
 		           });
 		       });
-			return "hello";
+			return b.toString();
 		});
 
 		// Wait for server to be initialized
