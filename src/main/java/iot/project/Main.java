@@ -82,11 +82,12 @@ public class Main {
        HouseData.print();
 
        HouseData.foreachRDD((i) -> {
-           bla = "";
+           bla = "{";
            i.foreach((i2) -> {
-               bla += (i2._1 + " : " + i2._2());
+               bla += ("\"" + i2._1 + "\":" + i2._2() +  "," );
            });
-
+           bla = bla.substring(0,bla.length()-1);
+           bla = bla +  "}";
        });
 
        ssc.start();
