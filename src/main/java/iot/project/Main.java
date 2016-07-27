@@ -20,6 +20,7 @@ import org.apache.spark.streaming.kafka.KafkaUtils;
 import scala.Product2;
 import scala.Tuple2;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 import de.farberg.spark.examples.streaming.ServerSocketSource;
@@ -61,28 +62,21 @@ public static String datagenerate (){
 				// Create the context with a 1 second batch size
 				SparkConf sparkConf = new SparkConf().setAppName("JavaNetworkWordCount").setMaster("local[2]");
 				JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, Durations.seconds(1));
+				
+				ssc.checkpoint("/tmp/log-analyzer-streaming");
+
 
 				// Create a JavaReceiverInputDStream on target ip:port and count the words in input stream of \n delimited text
 				JavaReceiverInputDStream<String> lines = ssc.socketTextStream(host, dataSource.getLocalPort(), StorageLevels.MEMORY_AND_DISK_SER);
 												
 				HouseData = lines.mapToPair(x -> new Tuple2<String, Integer>(x.split(",")[0] + "-" + x.split(",")[1] , Integer.parseInt(x.split(",")[2])))
-						.reduceByKey((i1, i2) -> i2);
+						.reduceByKey((i1, i2) -> i2)
+						.updateStateByKey((values, state) -> {
+						    	      return Optional.of(values.get(0));
+						    	    });
 				
 				HouseData.print();
-				RDD<Tuple2<String, Integer>> HouseDataRDD = null;
-				Object testArray = null;
 
-				try{
-					HouseData.wrapRDD(HouseDataRDD);
-					
-					testArray = HouseDataRDD.collect();
-						
-					System.out.println(testArray.toString());
-					System.out.println("Test");
-				} catch (Exception e){
-					
-				}
-				
 				ssc.start();
 
 				ssc.awaitTermination();
@@ -102,6 +96,11 @@ public static String datagenerate (){
 		spark.Spark.get("/hello", (req, res) -> "Hello World");
 		
 		spark.Spark.get("/test", (req, res) -> { 
+		       HouseData.foreachRDD((i) -> {
+		           i.foreach((d2) -> {
+		               System.out.println("xxx " + d2);
+		           });
+		       });
 			return "hello";
 		});
 
