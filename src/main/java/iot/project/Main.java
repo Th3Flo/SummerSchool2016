@@ -5,22 +5,31 @@ import io.netty.util.internal.ThreadLocalRandom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.StorageLevels;
+import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.rdd.RDD;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
+import org.apache.spark.streaming.kafka.KafkaUtils;
+
 import scala.Product2;
 import scala.Tuple2;
+
 import com.google.common.collect.Lists;
+
 import de.farberg.spark.examples.streaming.ServerSocketSource;
 import de.uniluebeck.itm.util.logging.Logging;
 
 public class Main {
-	private static JavaPairDStream<String,String> HouseData;
+	private static JavaPairDStream<String, Integer> HouseData;
 	static int webServerPort = 8080;
 	private static final String host = "localhost";
+	private static final String MTP = null;
 
 	static {
 		Logging.setLoggingDefaults();
@@ -56,14 +65,24 @@ public static String datagenerate (){
 				// Create a JavaReceiverInputDStream on target ip:port and count the words in input stream of \n delimited text
 				JavaReceiverInputDStream<String> lines = ssc.socketTextStream(host, dataSource.getLocalPort(), StorageLevels.MEMORY_AND_DISK_SER);
 												
-				HouseData = lines.mapToPair(x -> new Tuple2<String, String>(x.split(",")[0] + "-" + x.split(",")[1] , x.split(",")[2]))
+				HouseData = lines.mapToPair(x -> new Tuple2<String, Integer>(x.split(",")[0] + "-" + x.split(",")[1] , Integer.parseInt(x.split(",")[2])))
 						.reduceByKey((i1, i2) -> i2);
 				
-				
 				HouseData.print();
-				
-				
+				RDD<Tuple2<String, Integer>> HouseDataRDD = null;
+				Object testArray = null;
 
+				try{
+					HouseData.wrapRDD(HouseDataRDD);
+					
+					testArray = HouseDataRDD.collect();
+						
+					System.out.println(testArray.toString());
+					System.out.println("Test");
+				} catch (Exception e){
+					
+				}
+				
 				ssc.start();
 
 				ssc.awaitTermination();
@@ -82,8 +101,9 @@ public static String datagenerate (){
 		// Return "Hello World" at URL /hello
 		spark.Spark.get("/hello", (req, res) -> "Hello World");
 		
-//		spark.Spark.get("/test", (req, res) -> HouseData.print());
-
+		spark.Spark.get("/test", (req, res) -> { 
+			return "hello";
+		});
 
 		// Wait for server to be initialized
 		spark.Spark.awaitInitialization();
