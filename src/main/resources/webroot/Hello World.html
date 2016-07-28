@@ -339,7 +339,7 @@ function init()
 	
 	// spotlight #14
 	spotlight14 = new THREE.SpotLight(0xffd700);
-	spotlight14.position.set(-50,80,-420);
+	spotlight14.position.set(-10,120,-420);
 	spotlight14.shadowCameraVisible = true;
 	spotlight14.shadowDarkness = 0.95;
 	spotlight14.intensity = 0;
@@ -347,13 +347,13 @@ function init()
 	spotlight14.penumbra = 0.2;
 	scene.add(spotlight14);
 	var lightTarget = new THREE.Object3D();
-	lightTarget.position.set(-50,10,-420);
+	lightTarget.position.set(-10,10,-420);
 	scene.add(lightTarget);
 	spotlight14.target = lightTarget;
 	
 	// spotlight #15
 	spotlight15 = new THREE.SpotLight(0xffd700);
-	spotlight15.position.set(30,80,-420);
+	spotlight15.position.set(-10,150,-50);
 	spotlight15.shadowCameraVisible = true;
 	spotlight15.shadowDarkness = 0.95;
 	spotlight15.intensity = 0;
@@ -361,17 +361,18 @@ function init()
 	spotlight15.penumbra = 0.2;
 	scene.add(spotlight15);
 	var lightTarget = new THREE.Object3D();
-	lightTarget.position.set(30,10,-420);
+	lightTarget.position.set(-10,10,-50);
 	scene.add(lightTarget);
 	spotlight15.target = lightTarget;
-	/* 
+	
+	/*
 	THESE LIGHTS EXCEED THE ENGINE
 	// spotlight #16
 	spotlight16 = new THREE.SpotLight(0xffd700);
-	spotlight16.position.set(50,80,20);
+	spotlight16.position.set(-20,120,-50);
 	spotlight16.shadowCameraVisible = true;
 	spotlight16.shadowDarkness = 0.95;
-	spotlight16.intensity = 0;
+	spotlight16.intensity = 1;
 	spotlight16.castShadow = true;
 	spotlight16.penumbra = 0.2;
 	scene.add(spotlight16);
