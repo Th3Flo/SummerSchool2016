@@ -13,7 +13,23 @@
 <script src="js/THREEx.FullScreen.js"></script>
 <script src="js/THREEx.WindowResize.js"></script>
 
-
+<!-- jQuery code to display an information button and box when clicked. -->
+<script src="js/jquery-1.9.1.js"></script>
+<script src="js/jquery-ui.js"></script>
+<link rel=stylesheet href="css/jquery-ui.css" />
+<link rel=stylesheet href="css/info.css"/>
+<script src="js/info.js"></script>
+<div id="infoButton"></div>
+<div id="infoBox" title="SmartLights 3D View">
+Welcome to the 3D View of your SmartLights Environment!
+This interface allows you to monitor your current SmartLights activity.
+<br>
+Controls:
+<br>
+You can use the Left Mousebutton to rotate the Camera and the Right Mousebutton to pan.
+The Scrollingwheel can be used for zooming in and out.
+</div>
+<!-- ------------------------------------------------------------ -->
 
 <div id="ThreeJS" style="z-index: 1; position: absolute; left:0px; top:0px"></div>
 <script>
@@ -430,7 +446,7 @@ function init()
 	var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 	sphere.position.set(100, 50, -50);
 	sphere.castShadow = true;
-	scene.add(sphere);
+	//scene.add(sphere);
 	
 	// Create an array of materials to be used in a cube, one for each side
 	var cubeMaterialArray = [];
@@ -450,12 +466,12 @@ function init()
 	cube = new THREE.Mesh( cubeGeometry, cubeMaterials );
 	cube.position.set(-100, 50, -50);
 	cube.castShadow = true;
-	scene.add( cube );		
+	//scene.add( cube );		
 
 	// create a set of coordinate axes to help orient user
 	//    specify length in pixels in each direction
-	var axes = new THREE.AxisHelper(100);
-	scene.add( axes );
+	/* var axes = new THREE.AxisHelper(100);
+	scene.add( axes ); */
 	
 	///////////
 	// FLOOR //
@@ -530,6 +546,21 @@ function update_lights(){
 	}
 	if (lights["1-10"] != 1){
 		lights["1-10"] = 0;
+	}
+	if (lights["1-11"] != 1){
+		lights["1-11"] = 0;
+	}
+	if (lights["1-12"] != 1){
+		lights["1-12"] = 0;
+	}
+	if (lights["1-13"] != 1){
+		lights["1-13"] = 0;
+	}
+	if (lights["1-14"] != 1){
+		lights["1-14"] = 0;
+	}
+	if (lights["1-15"] != 1){
+		lights["1-15"] = 0;
 	}
 	spotlight1.intensity = lights["1-1"];
 	spotlight2.intensity = lights["1-2"];
