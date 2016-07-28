@@ -22,7 +22,7 @@
  function loadJSON(callback) {   
     var xobj = new XMLHttpRequest();
         xobj.overrideMimeType("application/json");
-    xobj.open('GET', 'js/lights.json', true); // Replace 'my_data' with the path to your file
+    xobj.open('GET', 'lightData', true); // Replace 'my_data' with the path to your file
     xobj.onreadystatechange = function () {
           if (xobj.readyState == 4 && xobj.status == "200") {
             // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
@@ -45,7 +45,7 @@ var container, scene, camera, renderer, controls, stats;
 var keyboard = new THREEx.KeyboardState();
 var clock = new THREE.Clock();
 var last_second = 0;
-var lights = {};
+var lights;
 
 // custom global variables
 var cube;
@@ -492,11 +492,60 @@ function init()
 	
 	// fog must be added to scene before first render
 	//scene.fog = new THREE.FogExp2( 0x9999ff, 0.00025 );
+	
+	lights = {"1-6":0,"1-8":0,"1-4":0,"1-15":0,"1-2":0,"1-11":0,"1-13":0,"1-14":0,"1-12":0,"1-9":0,"1-7":0,"1-5":0,"1-1":0,"1-3":0,"1-10":0};
+	
 }
 
 function update_lights(){
     loadJSON(function(response) {lights = JSON.parse(response);});
 	console.log(lights);
+	console.log("light 1" + lights["1-1"])
+	if (lights["1-1"] != 1){
+		lights["1-1"] = 0;
+	}
+	if (lights["1-2"] != 1){
+		lights["1-2"] = 0;
+	}
+	if (lights["1-3"] != 1){
+		lights["1-3"] = 0;
+	}
+	if (lights["1-4"] != 1){
+		lights["1-4"] = 0;
+	}
+	if (lights["1-5"] != 1){
+		lights["1-5"] = 0;
+	}
+	if (lights["1-6"] != 1){
+		lights["1-6"] = 0;
+	}
+	if (lights["1-7"] != 1){
+		lights["1-7"] = 0;
+	}
+	if (lights["1-8"] != 1){
+		lights["1-8"] = 0;
+	}
+	if (lights["1-9"] != 1){
+		lights["1-9"] = 0;
+	}
+	if (lights["1-10"] != 1){
+		lights["1-10"] = 0;
+	}
+	spotlight1.intensity = lights["1-1"];
+	spotlight2.intensity = lights["1-2"];
+	spotlight3.intensity = lights["1-3"];
+	spotlight4.intensity = lights["1-4"];
+	spotlight5.intensity = lights["1-5"];
+	spotlight6.intensity = lights["1-6"];
+	spotlight7.intensity = lights["1-7"];
+	spotlight8.intensity = lights["1-8"];
+	spotlight9.intensity = lights["1-9"];
+	spotlight10.intensity = lights["1-10"];
+	spotlight11.intensity = lights["1-11"];
+	spotlight12.intensity = lights["1-12"];
+	spotlight13.intensity = lights["1-13"];
+	spotlight14.intensity = lights["1-14"];
+	spotlight15.intensity = lights["1-15"];
 }
 
 function animate() 
@@ -507,8 +556,9 @@ function animate()
 		update_lights();
 		console.log("Updating...");
 		last_second = time.getSeconds();
-		spotlight15.intensity = Math.random();
+		
 	}
+
     requestAnimationFrame( animate );
     //Code that is executed during the animation loop
     cube.rotation.x += 0.1;

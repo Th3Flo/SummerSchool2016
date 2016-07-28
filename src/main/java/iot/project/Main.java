@@ -40,7 +40,7 @@ public class Main {
    public static String datagenerate() {
 
        int hid = ThreadLocalRandom.current().nextInt(1, 1 + 1);
-       int rid = ThreadLocalRandom.current().nextInt(1, 18 + 1);
+       int rid = ThreadLocalRandom.current().nextInt(1, 15 + 1);
        int io = ThreadLocalRandom.current().nextInt(0, 1 + 1);
 
        String hdata = hid + "," + rid + "," + io;
