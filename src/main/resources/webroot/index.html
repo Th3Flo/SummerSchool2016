@@ -1,112 +1,624 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="">
-	<meta name="author" content="">
-
-	<title>IoT project start page</title>
-
-	<!-- Bootstrap Core CSS -->
-	<link href="bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-
-	<!-- jQuery Version 1.11.1 -->
-	<script src="bower_components/jquery/dist/jquery.min.js"></script>
-
-	<!-- Bootstrap Core JavaScript -->
-	<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-
-	<!-- Leaflet -->
-	<script src="bower_components/leaflet/dist/leaflet.js"></script>
-	<link href="bower_components/leaflet/dist/leaflet.css" rel="stylesheet">
-
-	<!-- Custom CSS -->
-	<style>
-		body {
-			padding-top: 70px;
-			/* Required padding for .navbar-fixed-top. Remove if using .navbar-static-top. Change if height of navigation changes. */
-		}
-
-	</style>
-
-	<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-	<!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
+	<title>SmartLights 3D View</title>
 </head>
-
 <body>
 
-	<!-- Navigation -->
-	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-		<div class="container">
-			<!-- Brand and toggle get grouped for better mobile display -->
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-					<span class="sr-only">Toggle navigation</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand" href="#">Start Bootstrap</a>
-			</div>
-			<!-- Collect the nav links, forms, and other content for toggling -->
-			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-				<ul class="nav navbar-nav">
-					<li>
-						<a href="/hello">Hello World</a>
-					</li>
-					<li>
-						<a href="#">Something else</a>
-					</li>
-					<li>
-						<a href="#">Contact</a>
-					</li>
-				</ul>
-			</div>
-			<!-- /.navbar-collapse -->
-		</div>
-		<!-- /.container -->
-	</nav>
+<script src="js/Three.js"></script>
+<script src="js/Detector.js"></script>
+<script src="js/Stats.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script src="js/THREEx.KeyboardState.js"></script>
+<script src="js/THREEx.FullScreen.js"></script>
+<script src="js/THREEx.WindowResize.js"></script>
 
-	<!-- Page Content -->
-	<div class="container">
+<!-- jQuery code to display an information button and box when clicked. -->
+<script src="js/jquery-1.9.1.js"></script>
+<script src="js/jquery-ui.js"></script>
+<link rel=stylesheet href="css/jquery-ui.css" />
+<link rel=stylesheet href="css/info.css"/>
+<script src="js/info.js"></script>
+<div id="infoButton"></div>
+<div id="infoBox" title="SmartLights 3D View">
+Welcome to the 3D View of your SmartLights Environment!
+This interface allows you to monitor your current SmartLights activity.
+<br>
+Controls:
+<br>
+You can use the Left Mousebutton to rotate the Camera and the Right Mousebutton to pan.
+The Scrollingwheel can be used for zooming in and out.
+</div>
+<!-- ------------------------------------------------------------ -->
 
-		<div class="row">
-			<div class="col-lg-12 text-center">
-				<h1>Hello world</h1>
-				<p class="lead">Some intro text here!!</p>
-
-				<div id="map" style="width: 100%; height: 250px;"></div>
-
-				<script>
-					var map = L.map('map').setView([51.505, -0.09], 13);
-
-					L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-						attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-					}).addTo(map);
-
-					L.marker([51.5, -0.09]).addTo(map)
-						.bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
-						.openPopup();
-
-				</script>
+<div id="ThreeJS" style="z-index: 1; position: absolute; left:0px; top:0px"></div>
+<script>
 
 
-			</div>
-		</div>
-		<!-- /.row -->
+ function loadJSON(callback) {   
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+    xobj.open('GET', 'lightData', true); // Replace 'my_data' with the path to your file
+    xobj.onreadystatechange = function () {
+          if (xobj.readyState == 4 && xobj.status == "200") {
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            callback(xobj.responseText);
+          }
+    };
+    xobj.send(null);  
+ }
+ 
 
-	</div>
-	<!-- /.container -->
 
+
+	
+//////////	
+// MAIN //
+//////////
+
+// standard global variables
+var container, scene, camera, renderer, controls, stats;
+var keyboard = new THREEx.KeyboardState();
+var clock = new THREE.Clock();
+var last_second = 0;
+var lights;
+
+// custom global variables
+var cube;
+var spotlight1, spotlight2, spotlight3, spotlight4, spotlight5, spotlight6, spotlight7, spotlight8, spotlight9, spotlight10, spotlight11, spotlight12, spotlight13, spotlight14, spotlight15;
+// initialization
+init();
+
+// animation loop / game loop
+animate();
+
+///////////////
+// FUNCTIONS //
+///////////////
+			
+function init() 
+{
+	///////////
+	// SCENE //
+	///////////
+	scene = new THREE.Scene();
+
+	////////////
+	// CAMERA //
+	////////////
+	
+	// set the view size in pixels (custom or according to window size)
+	// var SCREEN_WIDTH = 400, SCREEN_HEIGHT = 300;
+	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;	
+	// camera attributes
+	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
+	// set up camera
+	camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
+	// add the camera to the scene
+	scene.add(camera);
+	// the camera defaults to position (0,0,0)
+	// 	so pull it back (z = 400) and up (y = 100) and set the angle towards the scene origin
+	camera.position.set(0,150,400);
+	camera.lookAt(scene.position);	
+	
+	//////////////
+	// RENDERER //
+	//////////////
+	
+	// create and start the renderer; choose antialias setting.
+	if ( Detector.webgl )
+		renderer = new THREE.WebGLRenderer( {antialias:true} );
+	else
+		renderer = new THREE.CanvasRenderer(); 
+	
+	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	
+	// attach div element to variable to contain the renderer
+	container = document.getElementById( 'ThreeJS' );
+	// alternatively: to create the div at runtime, use:
+	//   container = document.createElement( 'div' );
+	//    document.body.appendChild( container );
+	
+	// attach renderer to the container div
+	container.appendChild( renderer.domElement );
+	
+	////////////
+	// EVENTS //
+	////////////
+
+	// automatically resize renderer
+	THREEx.WindowResize(renderer, camera);
+	// toggle full-screen on given key press
+	THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
+	
+	//////////////
+	// CONTROLS //
+	//////////////
+
+	// move mouse and: left   click to rotate, 
+	//                 middle click to zoom, 
+	//                 right  click to pan
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
+	
+	///////////
+	// STATS //
+	///////////
+	
+	// displays current and past frames per second attained by scene
+	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.bottom = '0px';
+	stats.domElement.style.zIndex = 100;
+	container.appendChild( stats.domElement );
+	
+	///////////
+	// LIGHT //
+	///////////
+	
+	//Enable Shadows on the Renderer
+	renderer.shadowMapEnabled = true;
+	// create a light
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(0,250,0);
+	//scene.add(light);
+	//Ambient Light is always present at low intensity
+	var ambientLight = new THREE.AmbientLight(0x111111);
+	ambientLight.intensity = 3;
+	scene.add(ambientLight);
+
+	// spotlight #1
+	spotlight1 = new THREE.SpotLight(0xffd700);
+	spotlight1.position.set(370,80,-400);
+	spotlight1.shadowCameraVisible = true;
+	spotlight1.shadowDarkness = 0.95;
+	spotlight1.intensity = 0;
+	spotlight1.castShadow = true;
+	spotlight1.penumbra = 0.2;
+	scene.add(spotlight1);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(370,10,-400);
+	scene.add(lightTarget);
+	spotlight1.target = lightTarget;
+	
+	// spotlight #2
+	spotlight2 = new THREE.SpotLight(0xffd700);
+	spotlight2.position.set(370,80,-260);
+	spotlight2.shadowCameraVisible = true;
+	spotlight2.shadowDarkness = 0.95;
+	spotlight2.intensity = 0;
+	spotlight2.castShadow = true;
+	spotlight2.penumbra = 0.2;
+	scene.add(spotlight2);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(370,10,-260);
+	scene.add(lightTarget);
+	spotlight2.target = lightTarget;
+	
+	// spotlight #3
+	spotlight3 = new THREE.SpotLight(0xffd700);
+	spotlight3.position.set(370,80,-150);
+	spotlight3.shadowCameraVisible = true;
+	spotlight3.shadowDarkness = 0.95;
+	spotlight3.intensity = 0;
+	spotlight3.castShadow = true;
+	spotlight3.penumbra = 0.2;
+	scene.add(spotlight3);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(370,10,-150);
+	scene.add(lightTarget);
+	spotlight3.target = lightTarget;
+
+	// spotlight #4
+	spotlight4 = new THREE.SpotLight(0xffd700);
+	spotlight4.position.set(370,80,0);
+	spotlight4.shadowCameraVisible = true;
+	spotlight4.shadowDarkness = 0.95;
+	spotlight4.intensity = 0;
+	spotlight4.castShadow = true;
+	spotlight4.penumbra = 0.2;
+	scene.add(spotlight4);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(370,10,0);
+	scene.add(lightTarget);
+	spotlight4.target = lightTarget;
+	
+	// spotlight #5
+	spotlight5 = new THREE.SpotLight(0xffd700);
+	spotlight5.position.set(370,80,125);
+	spotlight5.shadowCameraVisible = true;
+	spotlight5.shadowDarkness = 0.95;
+	spotlight5.intensity = 0;
+	spotlight5.castShadow = true;
+	spotlight5.penumbra = 0.2;
+	scene.add(spotlight5);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(370,10,125);
+	scene.add(lightTarget);
+	spotlight5.target = lightTarget;
+	
+	// spotlight #6
+	spotlight6 = new THREE.SpotLight(0xffd700);
+	spotlight6.position.set(370,80,360);
+	spotlight6.shadowCameraVisible = true;
+	spotlight6.shadowDarkness = 0.95;
+	spotlight6.intensity = 0;
+	spotlight6.castShadow = true;
+	spotlight6.penumbra = 0.2;
+	scene.add(spotlight6);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(370,10,360);
+	scene.add(lightTarget);
+	spotlight6.target = lightTarget;
+	
+	// spotlight #7
+	spotlight7 = new THREE.SpotLight(0xffd700);
+	spotlight7.position.set(-80,80,360);
+	spotlight7.shadowCameraVisible = true;
+	spotlight7.shadowDarkness = 0.95;
+	spotlight7.intensity = 0;
+	spotlight7.castShadow = true;
+	spotlight7.penumbra = 0.2;
+	scene.add(spotlight7);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(-80,10,360);
+	scene.add(lightTarget);
+	spotlight7.target = lightTarget;
+	
+	// spotlight #8
+	spotlight8 = new THREE.SpotLight(0xffd700);
+	spotlight8.position.set(-385,80,360);
+	spotlight8.shadowCameraVisible = true;
+	spotlight8.shadowDarkness = 0.95;
+	spotlight8.intensity = 0;
+	spotlight8.castShadow = true;
+	spotlight8.penumbra = 0.2;
+	scene.add(spotlight8);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(-385,10,360);
+	scene.add(lightTarget);
+	spotlight8.target = lightTarget;
+	
+	// spotlight #9
+	spotlight9 = new THREE.SpotLight(0xffd700);
+	spotlight9.position.set(-385,80,100);
+	spotlight9.shadowCameraVisible = true;
+	spotlight9.shadowDarkness = 0.95;
+	spotlight9.intensity = 0;
+	spotlight9.castShadow = true;
+	spotlight9.penumbra = 0.2;
+	scene.add(spotlight9);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(-385,10,100);
+	scene.add(lightTarget);
+	spotlight9.target = lightTarget;
+	
+	// spotlight #10
+	spotlight10 = new THREE.SpotLight(0xffd700);
+	spotlight10.position.set(-385,80,-60);
+	spotlight10.shadowCameraVisible = true;
+	spotlight10.shadowDarkness = 0.95;
+	spotlight10.intensity = 0;
+	spotlight10.castShadow = true;
+	spotlight10.penumbra = 0.2;
+	scene.add(spotlight10);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(-385,10,-60);
+	scene.add(lightTarget);
+	spotlight10.target = lightTarget;
+	
+	// spotlight #11
+	spotlight11 = new THREE.SpotLight(0xffd700);
+	spotlight11.position.set(-385,80,-230);
+	spotlight11.shadowCameraVisible = true;
+	spotlight11.shadowDarkness = 0.95;
+	spotlight11.intensity = 0;
+	spotlight11.castShadow = true;
+	spotlight11.penumbra = 0.2;
+	scene.add(spotlight11);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(-385,10,-230);
+	scene.add(lightTarget);
+	spotlight11.target = lightTarget;
+	
+	// spotlight #12
+	spotlight12 = new THREE.SpotLight(0xffd700);
+	spotlight12.position.set(-385,80,-420);
+	spotlight12.shadowCameraVisible = true;
+	spotlight12.shadowDarkness = 0.95;
+	spotlight12.intensity = 0;
+	spotlight12.castShadow = true;
+	spotlight12.penumbra = 0.2;
+	scene.add(spotlight12);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(-385,10,-420);
+	scene.add(lightTarget);
+	spotlight12.target = lightTarget;
+	
+	// spotlight #13
+	spotlight13 = new THREE.SpotLight(0xffd700);
+	spotlight13.position.set(-270,80,-420);
+	spotlight13.shadowCameraVisible = true;
+	spotlight13.shadowDarkness = 0.95;
+	spotlight13.intensity = 0;
+	spotlight13.castShadow = true;
+	spotlight13.penumbra = 0.2;
+	scene.add(spotlight13);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(-270,10,-420);
+	scene.add(lightTarget);
+	spotlight13.target = lightTarget;
+	
+	// spotlight #14
+	spotlight14 = new THREE.SpotLight(0xffd700);
+	spotlight14.position.set(-10,120,-420);
+	spotlight14.shadowCameraVisible = true;
+	spotlight14.shadowDarkness = 0.95;
+	spotlight14.intensity = 0;
+	spotlight14.castShadow = true;
+	spotlight14.penumbra = 0.2;
+	scene.add(spotlight14);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(-10,10,-420);
+	scene.add(lightTarget);
+	spotlight14.target = lightTarget;
+	
+	// spotlight #15
+	spotlight15 = new THREE.SpotLight(0xffd700);
+	spotlight15.position.set(-10,150,-50);
+	spotlight15.shadowCameraVisible = true;
+	spotlight15.shadowDarkness = 0.95;
+	spotlight15.intensity = 0;
+	spotlight15.castShadow = true;
+	spotlight15.penumbra = 0.2;
+	scene.add(spotlight15);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(-10,10,-50);
+	scene.add(lightTarget);
+	spotlight15.target = lightTarget;
+	
+	/*
+	THESE LIGHTS EXCEED THE ENGINE
+	// spotlight #16
+	spotlight16 = new THREE.SpotLight(0xffd700);
+	spotlight16.position.set(-20,120,-50);
+	spotlight16.shadowCameraVisible = true;
+	spotlight16.shadowDarkness = 0.95;
+	spotlight16.intensity = 1;
+	spotlight16.castShadow = true;
+	spotlight16.penumbra = 0.2;
+	scene.add(spotlight16);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(50,10,20);
+	scene.add(lightTarget);
+	spotlight16.target = lightTarget;
+	
+	// spotlight #17
+	spotlight17 = new THREE.SpotLight(0xffd700);
+	spotlight17.position.set(30,80,-420);
+	spotlight17.shadowCameraVisible = true;
+	spotlight17.shadowDarkness = 0.95;
+	spotlight17.intensity = 0;
+	spotlight17.castShadow = true;
+	spotlight17.penumbra = 0.2;
+	scene.add(spotlight17);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(30,10,-420);
+	scene.add(lightTarget);
+	spotlight17.target = lightTarget;
+	
+	// spotlight #18
+	spotlight18 = new THREE.SpotLight(0xffd700);
+	spotlight18.position.set(30,80,-420);
+	spotlight18.shadowCameraVisible = true;
+	spotlight18.shadowDarkness = 0.95;
+	spotlight18.intensity = 0;
+	spotlight18.castShadow = true;
+	spotlight18.penumbra = 0.2;
+	scene.add(spotlight18);
+	var lightTarget = new THREE.Object3D();
+	lightTarget.position.set(30,10,-420);
+	scene.add(lightTarget);
+	spotlight18.target = lightTarget;
+	 */
+	/* var spotLight = new THREE.SpotLight( 0xffff00 );
+	spotLight.position.set( 10, 100, 10 );
+	spotLight.shadow.mapSize.width = 128;
+	spotLight.shadow.mapSize.height = 128;
+	spotLight.shadowCameraVisible = true;
+	spotLight.shadowDarkness = 0.95;
+	spotLight.intensity = 100;
+	spotLight.castShadow = true;
+	scene.add( spotLight ); */
+	
+	//////////////
+	// GEOMETRY //
+	//////////////
+		
+	// most objects displayed are a "mesh":
+	//  a collection of points ("geometry") and
+	//  a set of surface parameters ("material")	
+
+	// Sphere parameters: radius, segments along width, segments along height
+	var sphereGeometry = new THREE.SphereGeometry( 50, 32, 16 ); 
+	// use a "lambert" material rather than "basic" for realistic lighting.
+	//   (don't forget to add (at least one) light!)
+	var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} ); 
+	var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+	sphere.position.set(100, 50, -50);
+	sphere.castShadow = true;
+	//scene.add(sphere);
+	
+	// Create an array of materials to be used in a cube, one for each side
+	var cubeMaterialArray = [];
+	// order to add materials: x+,x-,y+,y-,z+,z-
+	cubeMaterialArray.push( new THREE.MeshLambertMaterial( { color: 0xff3333 } ) );
+	cubeMaterialArray.push( new THREE.MeshLambertMaterial( { color: 0xff8800 } ) );
+	cubeMaterialArray.push( new THREE.MeshLambertMaterial( { color: 0xffff33 } ) );
+	cubeMaterialArray.push( new THREE.MeshLambertMaterial( { color: 0x33ff33 } ) );
+	cubeMaterialArray.push( new THREE.MeshLambertMaterial( { color: 0x3333ff } ) );
+	cubeMaterialArray.push( new THREE.MeshLambertMaterial( { color: 0x8833ff } ) );
+	var cubeMaterials = new THREE.MeshFaceMaterial( cubeMaterialArray );
+	// Cube parameters: width (x), height (y), depth (z), 
+	//        (optional) segments along x, segments along y, segments along z
+	var cubeGeometry = new THREE.CubeGeometry( 100, 100, 100, 1, 1, 1 );
+	// using THREE.MeshFaceMaterial() in the constructor below
+	//   causes the mesh to use the materials stored in the geometry
+	cube = new THREE.Mesh( cubeGeometry, cubeMaterials );
+	cube.position.set(-100, 50, -50);
+	cube.castShadow = true;
+	//scene.add( cube );		
+
+	// create a set of coordinate axes to help orient user
+	//    specify length in pixels in each direction
+	/* var axes = new THREE.AxisHelper(100);
+	scene.add( axes ); */
+	
+	///////////
+	// FLOOR //
+	///////////
+	
+	// Floor Texture set to the Floorplan
+	// floor: mesh to receive shadows
+	var floorTexture = new THREE.ImageUtils.loadTexture( 'images/floorplan.png' );
+	floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
+	floorTexture.repeat.set( 1, 1 );
+	// Note the change to Lambert material.
+	var floorMaterial = new THREE.MeshLambertMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+	var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 100, 100);
+	var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+	floor.position.y = -0.5;
+	floor.rotation.x = Math.PI / 2;
+	// Note the mesh is flagged to receive shadows
+	floor.receiveShadow = true;
+	scene.add(floor);
+	 
+	/////////
+	// SKY //
+	/////////
+	
+	// recommend either a skybox or fog effect (can't use both at the same time) 
+	// without one of these, the scene's background color is determined by webpage background
+
+	// make sure the camera's "far" value is large enough so that it will render the skyBox!
+	var skyBoxGeometry = new THREE.CubeGeometry( 10000, 10000, 10000 );
+	// BackSide: render faces from inside of the cube, instead of from outside (default).
+	var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x9999ff, side: THREE.BackSide } );
+	var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+	scene.add(skyBox);
+	
+	// fog must be added to scene before first render
+	//scene.fog = new THREE.FogExp2( 0x9999ff, 0.00025 );
+	
+	lights = {"1-6":0,"1-8":0,"1-4":0,"1-15":0,"1-2":0,"1-11":0,"1-13":0,"1-14":0,"1-12":0,"1-9":0,"1-7":0,"1-5":0,"1-1":0,"1-3":0,"1-10":0};
+	
+}
+
+function update_lights(){
+    loadJSON(function(response) {lights = JSON.parse(response);});
+	console.log(lights);
+	console.log("light 1" + lights["1-1"])
+	if (lights["1-1"] != 1){
+		lights["1-1"] = 0;
+	}
+	if (lights["1-2"] != 1){
+		lights["1-2"] = 0;
+	}
+	if (lights["1-3"] != 1){
+		lights["1-3"] = 0;
+	}
+	if (lights["1-4"] != 1){
+		lights["1-4"] = 0;
+	}
+	if (lights["1-5"] != 1){
+		lights["1-5"] = 0;
+	}
+	if (lights["1-6"] != 1){
+		lights["1-6"] = 0;
+	}
+	if (lights["1-7"] != 1){
+		lights["1-7"] = 0;
+	}
+	if (lights["1-8"] != 1){
+		lights["1-8"] = 0;
+	}
+	if (lights["1-9"] != 1){
+		lights["1-9"] = 0;
+	}
+	if (lights["1-10"] != 1){
+		lights["1-10"] = 0;
+	}
+	if (lights["1-11"] != 1){
+		lights["1-11"] = 0;
+	}
+	if (lights["1-12"] != 1){
+		lights["1-12"] = 0;
+	}
+	if (lights["1-13"] != 1){
+		lights["1-13"] = 0;
+	}
+	if (lights["1-14"] != 1){
+		lights["1-14"] = 0;
+	}
+	if (lights["1-15"] != 1){
+		lights["1-15"] = 0;
+	}
+	spotlight1.intensity = lights["1-1"];
+	spotlight2.intensity = lights["1-2"];
+	spotlight3.intensity = lights["1-3"];
+	spotlight4.intensity = lights["1-4"];
+	spotlight5.intensity = lights["1-5"];
+	spotlight6.intensity = lights["1-6"];
+	spotlight7.intensity = lights["1-7"];
+	spotlight8.intensity = lights["1-8"];
+	spotlight9.intensity = lights["1-9"];
+	spotlight10.intensity = lights["1-10"];
+	spotlight11.intensity = lights["1-11"];
+	spotlight12.intensity = lights["1-12"];
+	spotlight13.intensity = lights["1-13"];
+	spotlight14.intensity = lights["1-14"];
+	spotlight15.intensity = lights["1-15"];
+}
+
+function animate() 
+//Animation Loop
+{
+	time = new Date();
+	if (last_second != time.getSeconds()){
+		update_lights();
+		console.log("Updating...");
+		last_second = time.getSeconds();
+		
+	}
+
+    requestAnimationFrame( animate );
+    //Code that is executed during the animation loop
+    cube.rotation.x += 0.1;
+	cube.rotation.y += 0.05;
+	render();		
+	update();
+}
+
+function update()
+{
+	// delta = change in time since last call (in seconds)
+	var delta = clock.getDelta(); 
+
+	// functionality provided by THREEx.KeyboardState.js
+	if ( keyboard.pressed("1") )
+		document.getElementById('message').innerHTML = ' Have a nice day! - 1';	
+	if ( keyboard.pressed("2") )
+		document.getElementById('message').innerHTML = ' Have a nice day! - 2 ';	
+		
+	controls.update();
+	stats.update();
+}
+
+function render() 
+{	
+	renderer.render( scene, camera );
+}
+
+</script>
 
 </body>
-
 </html>
