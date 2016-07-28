@@ -55,7 +55,6 @@ public class Main {
        // Start a web server
        setupWebServer(webServerPort);
        log.info("Web server started on port " + webServerPort);
-       log.info("Open http://localhost:" + webServerPort + " and/or http://localhost:" + webServerPort + "/hello");
 
 
        // Create a server socket data source that sends string values
@@ -64,7 +63,7 @@ public class Main {
        }, () -> 1000);
 
        // Create the context with a 1 second batch size
-       SparkConf sparkConf = new SparkConf().setAppName("JavaNetworkWordCount").setMaster("local[2]");
+       SparkConf sparkConf = new SparkConf().setAppName("SmartX").setMaster("local[2]");
        JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, Durations.seconds(1));
 
        File myTempDir = Files.createTempDir();
