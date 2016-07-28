@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.io.Files;
 
-import de.farberg.spark.examples.streaming.ServerSocketSource;
+import de.farberg.spark.Socket.Server.ServerSocketSource;
 import de.uniluebeck.itm.util.logging.Logging;
 import io.netty.util.internal.ThreadLocalRandom;
 import scala.Tuple2;
@@ -36,6 +36,7 @@ public class Main {
    // Data will look like Houseid, Roomid, io
    // io: 1 = Person in the Room --> Light should be turned on
    //	  0 = no Person in the Room --> Light should be turned off
+   // example: 1,1,0   
    public static String datagenerate() {
 
        int hid = ThreadLocalRandom.current().nextInt(1, 1 + 1);
@@ -98,16 +99,15 @@ public class Main {
            dataAsJs = dataAsJs.substring(0,dataAsJs.length()-1);
            dataAsJs = dataAsJs +  "}";
        });
-
+       
        ssc.start();
-
        ssc.awaitTermination();
        ssc.close();
        dataSource.stop();
-
    }
 
    public static void setupWebServer(int webServerPort) {
+	   
        // Set the web server's port
        spark.Spark.port(webServerPort);
 
