@@ -1,4 +1,4 @@
-package de.farberg.spark.examples.streaming;
+package de.farberg.spark.Socket.Server;
 
 import java.io.PrintWriter;
 import java.net.ServerSocket;
